@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "PakDigital AI Auto Commenter",
+  "version": "1.2.0",
+  "description": "Right Click AI Comment Generator for Facebook",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "contextMenus",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://*.facebook.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "PakDigital AI Settings"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.facebook.com/*"],
+      "js": ["license_manager.js", "ai_engine.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

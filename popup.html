@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 340px;
+      padding: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      margin: 0;
+    }
+    h3 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #818cf8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: #1e293b;
+      color: #38bdf8;
+      border: 1px solid #0284c7;
+    }
+    label {
+      font-size: 11px;
+      color: #94a3b8;
+      display: block;
+      margin-top: 8px;
+      margin-bottom: 3px;
+      font-weight: 500;
+    }
+    input, select, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 7px 10px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 12px;
+      outline: none;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #6366f1;
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+    }
+    .card {
+      margin-top: 10px;
+      padding: 10px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #e2e8f0;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .stat-text {
+      font-size: 11px;
+      color: #34d399;
+      font-weight: 600;
+    }
+    .btn-auto-start {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      background: linear-gradient(135deg, #16a34a, #059669);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 3px 10px rgba(22, 163, 74, 0.4);
+    }
+    .btn-auto-stop {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 3px 10px rgba(220, 38, 38, 0.4);
+    }
+    .btn-save {
+      width: 100%;
+      margin-top: 8px;
+      padding: 8px;
+      background: #4f46e5;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn-save:hover {
+      background: #4338ca;
+    }
+    .btn-clear {
+      width: 100%;
+      margin-top: 6px;
+      padding: 6px;
+      background: transparent;
+      color: #94a3b8;
+      border: 1px dashed #475569;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-clear:hover {
+      color: #f8fafc;
+      border-color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .hint {
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 2px;
+      line-height: 1.3;
+    }
+    #status {
+      font-size: 11px;
+      color: #34d399;
+      text-align: center;
+      margin-top: 6px;
+      display: none;
+      font-weight: bold;
+    }
+
+    /* License Lock View Styles */
+    #licenseGateView {
+      display: none;
+      text-align: center;
+      padding: 10px 4px;
+    }
+    .lock-icon {
+      font-size: 32px;
+      margin-bottom: 6px;
+    }
+    .license-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 4px;
+    }
+    .license-subtitle {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-bottom: 12px;
+    }
+    .device-pill {
+      display: inline-block;
+      padding: 4px 8px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      font-size: 10px;
+      color: #38bdf8;
+      font-family: monospace;
+      margin-bottom: 12px;
+    }
+    .btn-activate {
+      width: 100%;
+      margin-top: 10px;
+      padding: 9px;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    #licenseError {
+      font-size: 11px;
+      color: #ef4444;
+      margin-top: 8px;
+      display: none;
+      font-weight: 600;
+    }
+    .user-license-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      font-size: 10px;
+      color: #94a3b8;
+    }
+    .user-license-name {
+      color: #34d399;
+      font-weight: 700;
+    }
+    .link-deactivate {
+      color: #ef4444;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- VIEW 1: LICENSE LOCK GATE (Shown if not verified) -->
+  <div id="licenseGateView">
+    <div class="lock-icon">🔐</div>
+    <div class="license-title">PakDigital AI Agent</div>
+    <div class="license-subtitle">Device-Locked Enterprise License</div>
+    <div class="device-pill" id="displayDeviceId">Detecting PC ID...</div>
+
+    <label style="text-align: left;">Enter License Key</label>
+    <input type="text" id="licenseKeyInput" placeholder="e.g. PAK-ALI-101" style="text-align: center; font-weight: bold; letter-spacing: 1px;">
+
+    <button id="activateLicenseBtn" class="btn-activate">🔑 Activate License</button>
+    <div id="licenseError"></div>
+
+    <a id="whatsappSupportBtn" href="https://wa.me/?text=Hi%20PakDigital,%20I%20want%20to%20activate%20or%20renew%20my%20AI%20Lead%20Agent%20license!" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 14px; padding: 9px 12px; background: #16a34a; color: white; text-decoration: none; border-radius: 6px; font-size: 11px; font-weight: 700; transition: background 0.2s;">
+      <span>💬 Renew / Buy License via WhatsApp</span>
+    </a>
+
+    <details style="margin-top: 16px; border-top: 1px solid #334155; padding-top: 10px; text-align: left;">
+      <summary style="font-size: 10px; color: #64748b; cursor: pointer;">⚙️ Advanced Server Settings</summary>
+      <input type="text" id="licenseWebhookUrlInput" placeholder="Live Webhook Connected" style="font-size: 10px; padding: 5px; margin-top: 4px;">
+    </details>
+  </div>
+
+  <!-- VIEW 2: MAIN EXTENSION APP (Shown ONLY when license active) -->
+  <div id="mainAppView">
+    <div class="user-license-bar">
+      <span>👤 <span id="activeUserName" class="user-license-name">Verified User</span></span>
+      <span class="link-deactivate" id="logoutLicenseBtn">Deactivate / Change</span>
+    </div>
+
+    <!-- SUBSCRIPTION STATUS BAR -->
+    <div id="subscriptionInfoBar" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; margin-bottom: 10px; font-size: 10px;">
+      <span id="planBadge" style="color: #818cf8; font-weight: 700;">💎 Plan: Monthly</span>
+      <span id="daysRemainingBadge" style="color: #34d399; font-weight: 700;">⏳ Active</span>
+    </div>
+
+    <h3>
+      <span>⚡ PakDigital AI Agent</span>
+      <span class="badge" id="modeBadge">Ready</span>
+    </h3>
+
+    <label>Your Service</label>
+    <input type="text" id="customServiceName" placeholder="e.g. hvac, roofing, plumber, seo, web design">
+
+    <label>Call-To-Action (Customer se kya karwana hai?)</label>
+    <select id="ctaGoal">
+      <option value="call">📞 Phone Call Only</option>
+      <option value="call_whatsapp">📞 + 🟢 Call & WhatsApp (Both)</option>
+      <option value="call_dm">📞 + 💬 Call or DM (Both)</option>
+      <option value="whatsapp">🟢 WhatsApp Link Only (wa.me)</option>
+      <option value="dm">💬 Send Me a DM / Check Inbox</option>
+    </select>
+
+    <!-- Country & Phone Number Row -->
+    <div class="row">
+      <div style="flex: 1.3;">
+        <label>Country Code</label>
+        <select id="targetCountry">
+          <optgroup label="Popular Countries">
+            <option value="1">United States (+1)</option>
+            <option value="92">Pakistan (+92)</option>
+            <option value="44">United Kingdom (+44)</option>
+            <option value="1_ca">Canada (+1)</option>
+            <option value="971">United Arab Emirates (+971)</option>
+            <option value="966">Saudi Arabia (+966)</option>
+            <option value="61">Australia (+61)</option>
+            <option value="91">India (+91)</option>
+          </optgroup>
+          <optgroup label="All Countries (A - Z)">
+            <option value="93">Afghanistan (+93)</option>
+            <option value="355">Albania (+355)</option>
+            <option value="213">Algeria (+213)</option>
+            <option value="376">Andorra (+376)</option>
+            <option value="244">Angola (+244)</option>
+            <option value="54">Argentina (+54)</option>
+            <option value="374">Armenia (+374)</option>
+            <option value="43">Austria (+43)</option>
+            <option value="994">Azerbaijan (+994)</option>
+            <option value="973">Bahrain (+973)</option>
+            <option value="880">Bangladesh (+880)</option>
+            <option value="32">Belgium (+32)</option>
+            <option value="55">Brazil (+55)</option>
+            <option value="359">Bulgaria (+359)</option>
+            <option value="855">Cambodia (+855)</option>
+            <option value="56">Chile (+56)</option>
+            <option value="86">China (+86)</option>
+            <option value="57">Colombia (+57)</option>
+            <option value="506">Costa Rica (+506)</option>
+            <option value="385">Croatia (+385)</option>
+            <option value="357">Cyprus (+357)</option>
+            <option value="420">Czech Republic (+420)</option>
+            <option value="45">Denmark (+45)</option>
+            <option value="20">Egypt (+20)</option>
+            <option value="372">Estonia (+372)</option>
+            <option value="358">Finland (+358)</option>
+            <option value="33">France (+33)</option>
+            <option value="995">Georgia (+995)</option>
+            <option value="49">Germany (+49)</option>
+            <option value="30">Greece (+30)</option>
+            <option value="852">Hong Kong (+852)</option>
+            <option value="36">Hungary (+36)</option>
+            <option value="354">Iceland (+354)</option>
+            <option value="62">Indonesia (+62)</option>
+            <option value="964">Iraq (+964)</option>
+            <option value="353">Ireland (+353)</option>
+            <option value="972">Israel (+972)</option>
+            <option value="39">Italy (+39)</option>
+            <option value="81">Japan (+81)</option>
+            <option value="962">Jordan (+962)</option>
+            <option value="7">Kazakhstan (+7)</option>
+            <option value="254">Kenya (+254)</option>
+            <option value="965">Kuwait (+965)</option>
+            <option value="961">Lebanon (+961)</option>
+            <option value="60">Malaysia (+60)</option>
+            <option value="52">Mexico (+52)</option>
+            <option value="212">Morocco (+212)</option>
+            <option value="977">Nepal (+977)</option>
+            <option value="31">Netherlands (+31)</option>
+            <option value="64">New Zealand (+64)</option>
+            <option value="234">Nigeria (+234)</option>
+            <option value="47">Norway (+47)</option>
+            <option value="968">Oman (+968)</option>
+            <option value="63">Philippines (+63)</option>
+            <option value="48">Poland (+48)</option>
+            <option value="351">Portugal (+351)</option>
+            <option value="974">Qatar (+974)</option>
+            <option value="40">Romania (+40)</option>
+            <option value="7_ru">Russia (+7)</option>
+            <option value="65">Singapore (+65)</option>
+            <option value="27">South Africa (+27)</option>
+            <option value="82">South Korea (+82)</option>
+            <option value="34">Spain (+34)</option>
+            <option value="94">Sri Lanka (+94)</option>
+            <option value="46">Sweden (+46)</option>
+            <option value="41">Switzerland (+41)</option>
+            <option value="886">Taiwan (+886)</option>
+            <option value="66">Thailand (+66)</option>
+            <option value="90">Turkey (+90)</option>
+            <option value="380">Ukraine (+380)</option>
+            <option value="84">Vietnam (+84)</option>
+            <option value="auto">Other / Custom</option>
+          </optgroup>
+        </select>
+      </div>
+      <div style="flex: 1.7;">
+        <label id="contactLabel">Phone / WhatsApp</label>
+        <input type="text" id="contactPhone" placeholder="855-788-2696">
+      </div>
+    </div>
+    <div class="hint">Call me clean number aayega, WhatsApp link me code auto lag jayega</div>
+
+    <label>✍️ Custom AI Instruction / Tone (Optional)</label>
+    <input type="text" id="customInstruction" placeholder="e.g. call and whatsapp only, no dm, free estimate">
+
+    <label>Auto-Search Queries (Optional / Comma-Separated)</label>
+    <input type="text" id="searchKeyword" placeholder="e.g. need lawn care, looking for landscaper, yard cleanup">
+    <div class="hint">Khali chhor den toh AI khud buyer queries banayega. Multiple queries har 5-8 minute rotate hongi!</div>
+
+    <!-- Safety Limits & Auto-Pilot Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>🛡️ Safety Shield & Auto-Pilot</span>
+        <span class="stat-text" id="dailyCounterText">0 / 25 Today</span>
+      </div>
+
+      <div class="row">
+        <div style="flex: 1;">
+          <label>Daily Limit</label>
+          <input type="number" id="dailyLimit" value="25" min="5" max="100">
+        </div>
+        <div style="flex: 1;">
+          <label>Min Delay (Sec)</label>
+          <input type="number" id="minDelay" value="30" min="15" max="300">
+        </div>
+      </div>
+
+      <button id="startAutoBtn" class="btn-auto-start">
+        <span>🚀</span> Start Auto Search & Comment
+      </button>
+      <button id="stopAutoBtn" class="btn-auto-stop">
+        <span>⏹️</span> Stop Auto-Pilot
+      </button>
+    </div>
+
+    <button id="saveBtn" class="btn-save">Save Settings</button>
+    <button id="clearMemoryBtn" class="btn-clear">🧹 Reset Lead Memory (Test Fresh)</button>
+    <div id="status">✓ Settings Saved!</div>
+  </div>
+
+  <script src="license_manager.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
