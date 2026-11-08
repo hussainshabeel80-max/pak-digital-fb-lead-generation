@@ -130,8 +130,15 @@ function generateLicenseRow(planName, dailyLimit, maxProfiles, daysValid) {
   // Optional: Auto WhatsApp Link if phone provided
   var waStatus = "Skipped (No number provided)";
   var waLink = "";
+  var cleanPhone = "";
   if (clientPhone) {
-    var cleanPhone = clientPhone.replace(/[^0-9]/g, "");
+    cleanPhone = clientPhone.replace(/[^0-9]/g, "");
+    if (cleanPhone.startsWith("0")) {
+      cleanPhone = "92" + cleanPhone.slice(1);
+    } else if (cleanPhone.length === 10 && cleanPhone.startsWith("3")) {
+      cleanPhone = "92" + cleanPhone;
+    }
+
     var waText = encodeURIComponent(
       "⚡ *Welcome to PakDigital AI Lead Agent!*\n\n" +
       "Hi *" + clientName + "*,\n" +
@@ -143,23 +150,54 @@ function generateLicenseRow(planName, dailyLimit, maxProfiles, daysValid) {
       "To activate, paste your key inside the Chrome extension. Happy lead hunting!"
     );
     waLink = "https://wa.me/" + cleanPhone + "?text=" + waText;
-    waStatus = "✅ WhatsApp Link Ready (Click to send)";
+    waStatus = "✅ Ready";
   }
 
-  var finalMsg = "✅ Package Successfully Activated!\n\n" +
+  // Prepared plain text message for 1-Click Copy
+  var plainMsg = "⚡ Welcome to PakDigital AI Lead Agent!\n\n" +
+                 "Hi " + clientName + ",\n" +
+                 "Your license key has been activated:\n\n" +
                  "🔑 License Key: " + generatedKey + "\n" +
-                 "👤 Client: " + clientName + "\n" +
                  "💎 Plan: " + planName + " (" + dailyLimit + " Leads/Day)\n" +
-                 "💻 Max Chrome Profiles: " + maxProfiles + " Profile(s)\n" +
-                 "📅 Expiry: " + (expiryStr || "Lifetime") + "\n\n" +
-                 "✉️ Email Delivery: " + emailStatus + "\n" +
-                 "💬 WhatsApp Delivery: " + waStatus;
+                 "💻 Chrome Profiles: " + maxProfiles + " Profile(s)\n" +
+                 "📅 Expiry Date: " + (expiryStr || "Lifetime") + "\n\n" +
+                 "To activate, paste your key inside the Chrome extension. Happy lead hunting!";
 
-  if (waLink) {
-    finalMsg += "\n\nDirect WhatsApp URL (Copy or open):\n" + waLink;
-  }
+  var escapedMsg = plainMsg.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
 
-  ui.alert(finalMsg);
+  var htmlContent = 
+    "<div style='font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; padding: 5px; color: #0f172a;'>" +
+      "<div style='background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;'>" +
+        "<div style='font-size: 15px; font-weight: 700; color: #4338ca;'>🔑 Key: <code style='background: #e0e7ff; padding: 2px 6px; border-radius: 4px; font-size: 16px;'>" + generatedKey + "</code></div>" +
+        "<div style='font-size: 11px; color: #64748b; margin-top: 5px;'>👤 " + clientName + " | 💎 " + planName + " (" + dailyLimit + "/day) | 📅 " + (expiryStr || "Lifetime") + "</div>" +
+        "<div style='font-size: 11px; color: #16a34a; margin-top: 4px;'>✉️ Email: " + emailStatus + "</div>" +
+      "</div>" +
+
+      "<label style='font-size: 11px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;'>📋 Ready Message (Paste into your open WhatsApp):</label>" +
+      "<textarea id='msgArea' readonly style='width: 100%; height: 110px; box-sizing: border-box; padding: 8px; font-size: 11px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: monospace; resize: none; background: #ffffff;'>" + plainMsg + "</textarea>" +
+
+      "<div style='display: flex; gap: 8px; margin-top: 14px;'>" +
+        "<button id='copyBtn' onclick='doCopy()' style='flex: 1; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer;'>📋 Copy Message (1-Click)</button>" +
+        (waLink ? "<a href='" + waLink + "' target='_blank' style='padding: 10px 14px; background: #16a34a; color: white; text-decoration: none; border-radius: 6px; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center;'>💬 Open WhatsApp</a>" : "") +
+      "</div>" +
+
+      "<div id='copyNotice' style='font-size: 11px; color: #16a34a; font-weight: 600; margin-top: 8px; text-align: center; display: none;'>✓ Copied to clipboard! Go to your WhatsApp tab and press Ctrl + V</div>" +
+
+      "<script>" +
+        "function doCopy() {" +
+          "var el = document.getElementById('msgArea');" +
+          "el.select();" +
+          "document.execCommand('copy');" +
+          "var btn = document.getElementById('copyBtn');" +
+          "btn.innerText = '✅ Copied! Now Paste in WhatsApp';" +
+          "btn.style.background = '#10b981';" +
+          "document.getElementById('copyNotice').style.display = 'block';" +
+        "}" +
+      "</script>" +
+    "</div>";
+
+  var htmlOutput = HtmlService.createHtmlOutput(htmlContent).setWidth(430).setHeight(320);
+  ui.showModalDialog(htmlOutput, "✅ Package Activated Successfully!");
 }
 
 function generateStarterKey() {
