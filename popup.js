@@ -46,6 +46,53 @@ document.addEventListener('DOMContentLoaded', async () => {
   const clearMemoryBtn = document.getElementById('clearMemoryBtn');
   const status = document.getElementById('status');
 
+  // Dashboard Switching Elements
+  const tabMainDashboard = document.getElementById('tabMainDashboard');
+  const tabSniperDashboard = document.getElementById('tabSniperDashboard');
+  const mainDashboardView = document.getElementById('mainDashboardView');
+  const sniperDashboardView = document.getElementById('sniperDashboardView');
+  const openSniperFromMainBtn = document.getElementById('openSniperFromMainBtn');
+  const backToMainTopBtn = document.getElementById('backToMainTopBtn');
+  const backToMainBottomBtn = document.getElementById('backToMainBottomBtn');
+
+  // Sniper & Alert Elements
+  const sniperServiceName = document.getElementById('sniperServiceName');
+  const alertWhatsAppPhone = document.getElementById('alertWhatsAppPhone');
+  const enableChimeAlert = document.getElementById('enableChimeAlert');
+  const sniperSearchKeyword = document.getElementById('sniperSearchKeyword');
+  const sniperMinDelay = document.getElementById('sniperMinDelay');
+  const sniperDailyLimit = document.getElementById('sniperDailyLimit');
+  const customSheetWebhook = document.getElementById('customSheetWebhook');
+  const startSniperBtn = document.getElementById('startSniperBtn');
+  const stopSniperBtn = document.getElementById('stopSniperBtn');
+  const saveSniperBtn = document.getElementById('saveSniperBtn');
+  const sniperStatus = document.getElementById('sniperStatus');
+  const maxExistingComments = document.getElementById('maxExistingComments');
+  const maxPostAgeHours = document.getElementById('maxPostAgeHours');
+  const sniperMaxComments = document.getElementById('sniperMaxComments');
+  const sniperMaxAge = document.getElementById('sniperMaxAge');
+
+  // Tab Switcher Controller
+  function switchDashboard(target) {
+    if (target === 'sniper') {
+      if (mainDashboardView) mainDashboardView.style.display = 'none';
+      if (sniperDashboardView) sniperDashboardView.style.display = 'block';
+      if (tabMainDashboard) tabMainDashboard.classList.remove('active');
+      if (tabSniperDashboard) tabSniperDashboard.classList.add('active');
+    } else {
+      if (sniperDashboardView) sniperDashboardView.style.display = 'none';
+      if (mainDashboardView) mainDashboardView.style.display = 'block';
+      if (tabSniperDashboard) tabSniperDashboard.classList.remove('active');
+      if (tabMainDashboard) tabMainDashboard.classList.add('active');
+    }
+  }
+
+  if (tabMainDashboard) tabMainDashboard.addEventListener('click', () => switchDashboard('main'));
+  if (tabSniperDashboard) tabSniperDashboard.addEventListener('click', () => switchDashboard('sniper'));
+  if (openSniperFromMainBtn) openSniperFromMainBtn.addEventListener('click', () => switchDashboard('sniper'));
+  if (backToMainTopBtn) backToMainTopBtn.addEventListener('click', () => switchDashboard('main'));
+  if (backToMainBottomBtn) backToMainBottomBtn.addEventListener('click', () => switchDashboard('main'));
+
   const todayDate = new Date().toISOString().slice(0, 10);
 
   // 1. Initial Device ID Display
@@ -58,7 +105,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   chrome.storage.sync.get([
     'isLicenseActive', 'licenseKey', 'licensedUserName', 'licenseWebhookUrl',
     'customServiceName', 'ctaGoal', 'targetCountry', 'contactPhone', 'customInstruction', 
-    'searchKeyword', 'dailyLimit', 'minDelay', 'todayCount', 'lastDate', 'isAutoPilotRunning'
+    'searchKeyword', 'dailyLimit', 'minDelay', 'todayCount', 'lastDate', 'isAutoPilotRunning',
+    'sniperMode', 'sniperServiceName', 'alertWhatsAppPhone', 'enableChimeAlert', 'sniperSearchKeyword',
+    'sniperMinDelay', 'sniperDailyLimit', 'customSheetWebhook',
+    'maxExistingComments', 'maxPostAgeHours', 'sniperMaxComments', 'sniperMaxAge'
   ], async (data) => {
     if (data.licenseWebhookUrl) {
       licenseWebhookUrlInput.value = data.licenseWebhookUrl;
@@ -113,6 +163,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (data.searchKeyword) searchKeyword.value = data.searchKeyword;
     if (data.dailyLimit) dailyLimit.value = data.dailyLimit;
     if (data.minDelay) minDelay.value = data.minDelay;
+    if (data.maxExistingComments && maxExistingComments) maxExistingComments.value = String(data.maxExistingComments);
+    if (data.maxPostAgeHours && maxPostAgeHours) maxPostAgeHours.value = String(data.maxPostAgeHours);
+
+    // Load Dedicated Sniper Settings
+    if (sniperServiceName) sniperServiceName.value = data.sniperServiceName || data.customServiceName || "";
+    if (data.sniperSearchKeyword && sniperSearchKeyword) sniperSearchKeyword.value = data.sniperSearchKeyword;
+    if (data.sniperDailyLimit && sniperDailyLimit) sniperDailyLimit.value = data.sniperDailyLimit;
+    if (data.sniperMinDelay && sniperMinDelay) sniperMinDelay.value = data.sniperMinDelay;
+    if (data.sniperMaxComments && sniperMaxComments) sniperMaxComments.value = String(data.sniperMaxComments);
+    if (data.sniperMaxAge && sniperMaxAge) sniperMaxAge.value = String(data.sniperMaxAge);
+    if (data.alertWhatsAppPhone && alertWhatsAppPhone) alertWhatsAppPhone.value = data.alertWhatsAppPhone;
+    if (data.enableChimeAlert !== undefined && enableChimeAlert) enableChimeAlert.value = String(data.enableChimeAlert);
+    if (data.customSheetWebhook && customSheetWebhook) customSheetWebhook.value = data.customSheetWebhook;
 
     updatePlaceholders();
 
@@ -126,7 +189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     dailyCounterText.innerText = `${count} / ${limit} Today`;
 
     if (data.isAutoPilotRunning) {
-      setRunningState(true);
+      setRunningState(true, data.sniperMode === "alert_only" ? "sniper" : "commenter");
     } else {
       setRunningState(false);
     }
@@ -167,20 +230,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  const ADMIN_WHATSAPP_NUMBER = "923151708943";
   const whatsappSupportBtn = document.getElementById('whatsappSupportBtn');
   function updateWhatsAppLink(key) {
     if (!whatsappSupportBtn) return;
     const devId = displayDeviceId ? displayDeviceId.innerText : "My PC";
     const userKey = key || (licenseKeyInput ? licenseKeyInput.value.trim() : "");
     const msg = encodeURIComponent(`Hi PakDigital Admin, I want to activate or renew my AI Lead Agent license.\n${devId}\nKey: ${userKey}`);
-    whatsappSupportBtn.href = `https://wa.me/?text=${msg}`;
+    whatsappSupportBtn.href = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${msg}`;
   }
 
   function getMaxDailyLimitForPlan(plan) {
     const p = (plan || "").toLowerCase();
     if (p.includes("trial")) return 15;
-    if (p.includes("basic")) return 25;
-    if (p.includes("pro")) return 50;
+    if (p.includes("starter") || p.includes("basic")) return 20;
+    if (p.includes("pro")) return 30;
+    if (p.includes("agency")) return 30;
     return 150;
   }
 
@@ -284,22 +349,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     chrome.runtime.sendMessage({ action: "RELOAD_ACTIVE_TAB_SCRIPTS", tabId: activeTab.id });
   }
 
-  function setRunningState(running) {
+  function setRunningState(running, mode) {
     if (running) {
-      modeBadge.innerText = "Auto-Pilot Active";
-      modeBadge.style.color = "#34d399";
-      modeBadge.style.borderColor = "#059669";
-      startAutoBtn.style.display = "none";
-      stopAutoBtn.style.display = "flex";
+      if (mode === "sniper") {
+        modeBadge.innerText = "🎯 Lead Sniper Active";
+        modeBadge.style.color = "#a855f7";
+        modeBadge.style.borderColor = "#7c3aed";
+        if (startSniperBtn) startSniperBtn.style.display = "none";
+        if (stopSniperBtn) stopSniperBtn.style.display = "flex";
+        if (startAutoBtn) startAutoBtn.style.display = "none";
+        if (stopAutoBtn) stopAutoBtn.style.display = "none";
+      } else {
+        modeBadge.innerText = "🚀 Auto-Commenter Active";
+        modeBadge.style.color = "#34d399";
+        modeBadge.style.borderColor = "#059669";
+        if (startSniperBtn) startSniperBtn.style.display = "none";
+        if (stopSniperBtn) stopSniperBtn.style.display = "none";
+        if (startAutoBtn) startAutoBtn.style.display = "none";
+        if (stopAutoBtn) stopAutoBtn.style.display = "flex";
+      }
     } else {
       modeBadge.innerText = "Ready";
       modeBadge.style.color = "#38bdf8";
       modeBadge.style.borderColor = "#0284c7";
-      startAutoBtn.style.display = "flex";
-      stopAutoBtn.style.display = "none";
+      if (startSniperBtn) startSniperBtn.style.display = "flex";
+      if (stopSniperBtn) stopSniperBtn.style.display = "none";
+      if (startAutoBtn) startAutoBtn.style.display = "flex";
+      if (stopAutoBtn) stopAutoBtn.style.display = "none";
     }
   }
 
+  // Save Main Auto-Pilot Settings
   saveBtn.addEventListener('click', () => {
     chrome.storage.sync.get(['subscriptionPlan'], (data) => {
       const maxAllowed = getMaxDailyLimitForPlan(data.subscriptionPlan);
@@ -316,13 +396,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         customInstruction: customInstruction.value.trim(),
         searchKeyword: searchKeyword.value.trim(),
         dailyLimit: chosenLimit,
-        minDelay: parseInt(minDelay.value) || 30
+        minDelay: parseInt(minDelay.value) || 30,
+        maxExistingComments: maxExistingComments ? parseInt(maxExistingComments.value) || 5 : 5,
+        maxPostAgeHours: maxPostAgeHours ? parseInt(maxPostAgeHours.value) || 8 : 8
       }, () => {
         status.style.display = "block";
         setTimeout(() => status.style.display = "none", 1500);
       });
     });
   });
+
+  // Save Dedicated Sniper Settings
+  if (saveSniperBtn) {
+    saveSniperBtn.addEventListener('click', () => {
+      chrome.storage.sync.set({
+        sniperServiceName: sniperServiceName ? sniperServiceName.value.trim() : "",
+        alertWhatsAppPhone: alertWhatsAppPhone ? alertWhatsAppPhone.value.trim() : "",
+        enableChimeAlert: enableChimeAlert ? (enableChimeAlert.value === "true") : true,
+        sniperSearchKeyword: sniperSearchKeyword ? sniperSearchKeyword.value.trim() : "",
+        sniperMinDelay: sniperMinDelay ? parseInt(sniperMinDelay.value) || 25 : 25,
+        sniperDailyLimit: sniperDailyLimit ? parseInt(sniperDailyLimit.value) || 40 : 40,
+        sniperMaxComments: sniperMaxComments ? parseInt(sniperMaxComments.value) || 5 : 5,
+        sniperMaxAge: sniperMaxAge ? parseInt(sniperMaxAge.value) || 8 : 8,
+        customSheetWebhook: customSheetWebhook ? customSheetWebhook.value.trim() : ""
+      }, () => {
+        if (sniperStatus) {
+          sniperStatus.style.display = "block";
+          setTimeout(() => sniperStatus.style.display = "none", 1500);
+        }
+      });
+    });
+  }
 
   // Clear Lead Memory (allow testing on same posts)
   clearMemoryBtn.addEventListener('click', async () => {
@@ -339,8 +443,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 1500);
   });
 
-  // Start Auto-Pilot / Auto-Search
-  startAutoBtn.addEventListener('click', async () => {
+  // Reusable launch engine for both Sniper & Full Auto-Commenter
+  async function launchAutomatedTask(mode) {
     const licData = await chrome.storage.sync.get(['isLicenseActive', 'licenseKey', 'licenseWebhookUrl']);
     if (!licData.isLicenseActive || !licData.licenseKey) {
       showLockGate();
@@ -356,50 +460,99 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    const service = customServiceName.value.trim();
-    const rawQueries = searchKeyword.value.trim();
+    let service = "";
+    let rawQueries = "";
+    let limit = 25;
+    let delay = 30;
+
+    if (mode === "alert_only") {
+      service = (sniperServiceName && sniperServiceName.value.trim()) || customServiceName.value.trim();
+      rawQueries = (sniperSearchKeyword && sniperSearchKeyword.value.trim()) || searchKeyword.value.trim();
+      limit = (sniperDailyLimit && parseInt(sniperDailyLimit.value)) || 40;
+      delay = (sniperMinDelay && parseInt(sniperMinDelay.value)) || 25;
+    } else {
+      service = customServiceName.value.trim();
+      rawQueries = searchKeyword.value.trim();
+      limit = parseInt(dailyLimit.value) || 25;
+      delay = parseInt(minDelay.value) || 30;
+    }
+
     const queue = buildSearchQueryQueue(service, rawQueries);
     const firstQuery = queue[0];
     const goal = ctaGoal.value;
     const country = targetCountry.value;
     const phone = contactPhone.value.trim();
     const instruction = customInstruction.value.trim();
-    const limit = parseInt(dailyLimit.value) || 25;
-    const delay = parseInt(minDelay.value) || 30;
 
     await chrome.storage.sync.set({
-      customServiceName: service,
+      customServiceName: customServiceName.value.trim(),
+      sniperServiceName: sniperServiceName ? sniperServiceName.value.trim() : "",
       ctaGoal: goal,
       targetCountry: country,
       contactPhone: phone,
       customInstruction: instruction,
       searchKeyword: rawQueries,
+      sniperSearchKeyword: sniperSearchKeyword ? sniperSearchKeyword.value.trim() : "",
       searchQueryQueue: queue,
       activeQueryIndex: 0,
       queryStartTime: Date.now(),
       dailyLimit: limit,
       minDelay: delay,
+      sniperMinDelay: delay,
+      sniperDailyLimit: limit,
+      sniperMode: mode,
+      alertWhatsAppPhone: alertWhatsAppPhone ? alertWhatsAppPhone.value.trim() : "",
+      enableChimeAlert: enableChimeAlert ? (enableChimeAlert.value === "true") : true,
+      customSheetWebhook: customSheetWebhook ? customSheetWebhook.value.trim() : "",
+      maxExistingComments: maxExistingComments ? parseInt(maxExistingComments.value) || 5 : 5,
+      maxPostAgeHours: maxPostAgeHours ? parseInt(maxPostAgeHours.value) || 8 : 8,
+      sniperMaxComments: sniperMaxComments ? parseInt(sniperMaxComments.value) || 5 : 5,
+      sniperMaxAge: sniperMaxAge ? parseInt(sniperMaxAge.value) || 8 : 8,
       isAutoPilotRunning: true
     });
 
-    setRunningState(true);
+    setRunningState(true, mode === "alert_only" ? "sniper" : "commenter");
 
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab) return;
 
-    const fbSearchUrl = `https://www.facebook.com/search/posts/?q=${encodeURIComponent(firstQuery)}&filters=eyJycF9jaHJvbm9fc29ydDoiZXlKaGJHY2lPaUpTVXpJMU5pSjlmUT09In0%3D`;
+    const CHRONO_SORT_FILTER = "eyJycF9jaHJvbm9fc29ydCI6IntcIm5hbWVcIjpcImNocm9ub3NvcnRcIixcImFyZ3NcIjpcIlwifSJ9";
+    const fbSearchUrl = `https://www.facebook.com/search/posts/?q=${encodeURIComponent(firstQuery)}&filters=${CHRONO_SORT_FILTER}`;
 
     chrome.tabs.update(tab.id, { url: fbSearchUrl });
-  });
+  }
 
-  // Stop Auto-Pilot
-  stopAutoBtn.addEventListener('click', async () => {
-    await chrome.storage.sync.set({ isAutoPilotRunning: false });
-    setRunningState(false);
+  // 1. Lead Sniper Start & Stop
+  if (startSniperBtn) {
+    startSniperBtn.addEventListener('click', async () => {
+      await launchAutomatedTask("alert_only");
+    });
+  }
+  if (stopSniperBtn) {
+    stopSniperBtn.addEventListener('click', async () => {
+      await chrome.storage.sync.set({ isAutoPilotRunning: false });
+      setRunningState(false);
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab && tab.id) {
+        chrome.tabs.sendMessage(tab.id, { action: "STOP_AUTOPILOT" });
+      }
+    });
+  }
 
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab && tab.id) {
-      chrome.tabs.sendMessage(tab.id, { action: "STOP_AUTOPILOT" });
-    }
-  });
+  // 2. Auto-Commenter Start & Stop
+  if (startAutoBtn) {
+    startAutoBtn.addEventListener('click', async () => {
+      await launchAutomatedTask("comment_and_alert");
+    });
+  }
+  if (stopAutoBtn) {
+    stopAutoBtn.addEventListener('click', async () => {
+      await chrome.storage.sync.set({ isAutoPilotRunning: false });
+      setRunningState(false);
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab && tab.id) {
+        chrome.tabs.sendMessage(tab.id, { action: "STOP_AUTOPILOT" });
+      }
+    });
+  }
 });

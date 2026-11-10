@@ -148,13 +148,62 @@
       margin-top: 2px;
       line-height: 1.3;
     }
-    #status {
+    #status, #sniperStatus {
       font-size: 11px;
       color: #34d399;
       text-align: center;
       margin-top: 6px;
       display: none;
       font-weight: bold;
+    }
+
+    /* Dashboard Switcher Tabs */
+    .dashboard-switcher {
+      display: flex;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 10px;
+      gap: 6px;
+    }
+    .switch-btn {
+      flex: 1;
+      padding: 7px 8px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+    }
+    .switch-btn:hover {
+      color: #f1f5f9;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .switch-btn.active {
+      background: #16a34a;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(22, 163, 74, 0.4);
+    }
+    .switch-btn.sniper-btn.active {
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+    }
+    .pulse-badge {
+      font-size: 8.5px;
+      background: #ef4444;
+      color: white;
+      padding: 1px 5px;
+      border-radius: 10px;
+      font-weight: 800;
     }
 
     /* License Lock View Styles */
@@ -246,7 +295,7 @@
     <button id="activateLicenseBtn" class="btn-activate">🔑 Activate License</button>
     <div id="licenseError"></div>
 
-    <a id="whatsappSupportBtn" href="https://wa.me/?text=Hi%20PakDigital,%20I%20want%20to%20activate%20or%20renew%20my%20AI%20Lead%20Agent%20license!" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 14px; padding: 9px 12px; background: #16a34a; color: white; text-decoration: none; border-radius: 6px; font-size: 11px; font-weight: 700; transition: background 0.2s;">
+    <a id="whatsappSupportBtn" href="https://wa.me/923151708943?text=Hi%20PakDigital,%20I%20want%20to%20activate%20or%20renew%20my%20AI%20Lead%20Agent%20license!" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 14px; padding: 9px 12px; background: #16a34a; color: white; text-decoration: none; border-radius: 6px; font-size: 11px; font-weight: 700; transition: background 0.2s;">
       <span>💬 Renew / Buy License via WhatsApp</span>
     </a>
 
@@ -269,157 +318,303 @@
       <span id="daysRemainingBadge" style="color: #34d399; font-weight: 700;">⏳ Active</span>
     </div>
 
-    <h3>
-      <span>⚡ PakDigital AI Agent</span>
-      <span class="badge" id="modeBadge">Ready</span>
-    </h3>
-
-    <label>Your Service</label>
-    <input type="text" id="customServiceName" placeholder="e.g. hvac, roofing, plumber, seo, web design">
-
-    <label>Call-To-Action (Customer se kya karwana hai?)</label>
-    <select id="ctaGoal">
-      <option value="call">📞 Phone Call Only</option>
-      <option value="call_whatsapp">📞 + 🟢 Call & WhatsApp (Both)</option>
-      <option value="call_dm">📞 + 💬 Call or DM (Both)</option>
-      <option value="whatsapp">🟢 WhatsApp Link Only (wa.me)</option>
-      <option value="dm">💬 Send Me a DM / Check Inbox</option>
-    </select>
-
-    <!-- Country & Phone Number Row -->
-    <div class="row">
-      <div style="flex: 1.3;">
-        <label>Country Code</label>
-        <select id="targetCountry">
-          <optgroup label="Popular Countries">
-            <option value="1">United States (+1)</option>
-            <option value="92">Pakistan (+92)</option>
-            <option value="44">United Kingdom (+44)</option>
-            <option value="1_ca">Canada (+1)</option>
-            <option value="971">United Arab Emirates (+971)</option>
-            <option value="966">Saudi Arabia (+966)</option>
-            <option value="61">Australia (+61)</option>
-            <option value="91">India (+91)</option>
-          </optgroup>
-          <optgroup label="All Countries (A - Z)">
-            <option value="93">Afghanistan (+93)</option>
-            <option value="355">Albania (+355)</option>
-            <option value="213">Algeria (+213)</option>
-            <option value="376">Andorra (+376)</option>
-            <option value="244">Angola (+244)</option>
-            <option value="54">Argentina (+54)</option>
-            <option value="374">Armenia (+374)</option>
-            <option value="43">Austria (+43)</option>
-            <option value="994">Azerbaijan (+994)</option>
-            <option value="973">Bahrain (+973)</option>
-            <option value="880">Bangladesh (+880)</option>
-            <option value="32">Belgium (+32)</option>
-            <option value="55">Brazil (+55)</option>
-            <option value="359">Bulgaria (+359)</option>
-            <option value="855">Cambodia (+855)</option>
-            <option value="56">Chile (+56)</option>
-            <option value="86">China (+86)</option>
-            <option value="57">Colombia (+57)</option>
-            <option value="506">Costa Rica (+506)</option>
-            <option value="385">Croatia (+385)</option>
-            <option value="357">Cyprus (+357)</option>
-            <option value="420">Czech Republic (+420)</option>
-            <option value="45">Denmark (+45)</option>
-            <option value="20">Egypt (+20)</option>
-            <option value="372">Estonia (+372)</option>
-            <option value="358">Finland (+358)</option>
-            <option value="33">France (+33)</option>
-            <option value="995">Georgia (+995)</option>
-            <option value="49">Germany (+49)</option>
-            <option value="30">Greece (+30)</option>
-            <option value="852">Hong Kong (+852)</option>
-            <option value="36">Hungary (+36)</option>
-            <option value="354">Iceland (+354)</option>
-            <option value="62">Indonesia (+62)</option>
-            <option value="964">Iraq (+964)</option>
-            <option value="353">Ireland (+353)</option>
-            <option value="972">Israel (+972)</option>
-            <option value="39">Italy (+39)</option>
-            <option value="81">Japan (+81)</option>
-            <option value="962">Jordan (+962)</option>
-            <option value="7">Kazakhstan (+7)</option>
-            <option value="254">Kenya (+254)</option>
-            <option value="965">Kuwait (+965)</option>
-            <option value="961">Lebanon (+961)</option>
-            <option value="60">Malaysia (+60)</option>
-            <option value="52">Mexico (+52)</option>
-            <option value="212">Morocco (+212)</option>
-            <option value="977">Nepal (+977)</option>
-            <option value="31">Netherlands (+31)</option>
-            <option value="64">New Zealand (+64)</option>
-            <option value="234">Nigeria (+234)</option>
-            <option value="47">Norway (+47)</option>
-            <option value="968">Oman (+968)</option>
-            <option value="63">Philippines (+63)</option>
-            <option value="48">Poland (+48)</option>
-            <option value="351">Portugal (+351)</option>
-            <option value="974">Qatar (+974)</option>
-            <option value="40">Romania (+40)</option>
-            <option value="7_ru">Russia (+7)</option>
-            <option value="65">Singapore (+65)</option>
-            <option value="27">South Africa (+27)</option>
-            <option value="82">South Korea (+82)</option>
-            <option value="34">Spain (+34)</option>
-            <option value="94">Sri Lanka (+94)</option>
-            <option value="46">Sweden (+46)</option>
-            <option value="41">Switzerland (+41)</option>
-            <option value="886">Taiwan (+886)</option>
-            <option value="66">Thailand (+66)</option>
-            <option value="90">Turkey (+90)</option>
-            <option value="380">Ukraine (+380)</option>
-            <option value="84">Vietnam (+84)</option>
-            <option value="auto">Other / Custom</option>
-          </optgroup>
-        </select>
-      </div>
-      <div style="flex: 1.7;">
-        <label id="contactLabel">Phone / WhatsApp</label>
-        <input type="text" id="contactPhone" placeholder="855-788-2696">
-      </div>
+    <!-- TOP DASHBOARD SWITCHER TABS -->
+    <div class="dashboard-switcher">
+      <button id="tabMainDashboard" class="switch-btn active" type="button">
+        <span>🚀 Auto-Commenter</span>
+      </button>
+      <button id="tabSniperDashboard" class="switch-btn sniper-btn" type="button">
+        <span>🎯 Live Lead Sniper</span>
+        <span class="pulse-badge">Hot</span>
+      </button>
     </div>
-    <div class="hint">Call me clean number aayega, WhatsApp link me code auto lag jayega</div>
 
-    <label>✍️ Custom AI Instruction / Tone (Optional)</label>
-    <input type="text" id="customInstruction" placeholder="e.g. call and whatsapp only, no dm, free estimate">
+    <!-- ============================================================== -->
+    <!-- DASHBOARD VIEW 1: ORIGINAL MAIN AUTO-PILOT (DEFAULT VISIBLE)   -->
+    <!-- ============================================================== -->
+    <div id="mainDashboardView">
+      <h3>
+        <span>⚡ PakDigital AI Agent</span>
+        <span class="badge" id="modeBadge">Ready</span>
+      </h3>
 
-    <label>Auto-Search Queries (Optional / Comma-Separated)</label>
-    <input type="text" id="searchKeyword" placeholder="e.g. need lawn care, looking for landscaper, yard cleanup">
-    <div class="hint">Khali chhor den toh AI khud buyer queries banayega. Multiple queries har 5-8 minute rotate hongi!</div>
+      <label>Your Service</label>
+      <input type="text" id="customServiceName" placeholder="e.g. hvac, roofing, plumber, seo, web design">
 
-    <!-- Safety Limits & Auto-Pilot Card -->
-    <div class="card">
-      <div class="card-title">
-        <span>🛡️ Safety Shield & Auto-Pilot</span>
-        <span class="stat-text" id="dailyCounterText">0 / 25 Today</span>
-      </div>
+      <label>Call-To-Action (Customer se kya karwana hai?)</label>
+      <select id="ctaGoal">
+        <option value="call">📞 Phone Call Only</option>
+        <option value="call_whatsapp">📞 + 🟢 Call & WhatsApp (Both)</option>
+        <option value="call_dm">📞 + 💬 Call or DM (Both)</option>
+        <option value="whatsapp">🟢 WhatsApp Link Only (wa.me)</option>
+        <option value="dm">💬 Send Me a DM / Check Inbox</option>
+      </select>
 
+      <!-- Country & Phone Number Row -->
       <div class="row">
-        <div style="flex: 1;">
-          <label>Daily Limit</label>
-          <input type="number" id="dailyLimit" value="25" min="5" max="100">
+        <div style="flex: 1.3;">
+          <label>Country Code</label>
+          <select id="targetCountry">
+            <optgroup label="Popular Countries">
+              <option value="1">United States (+1)</option>
+              <option value="92">Pakistan (+92)</option>
+              <option value="44">United Kingdom (+44)</option>
+              <option value="1_ca">Canada (+1)</option>
+              <option value="971">United Arab Emirates (+971)</option>
+              <option value="966">Saudi Arabia (+966)</option>
+              <option value="61">Australia (+61)</option>
+              <option value="91">India (+91)</option>
+            </optgroup>
+            <optgroup label="All Countries (A - Z)">
+              <option value="93">Afghanistan (+93)</option>
+              <option value="355">Albania (+355)</option>
+              <option value="213">Algeria (+213)</option>
+              <option value="376">Andorra (+376)</option>
+              <option value="244">Angola (+244)</option>
+              <option value="54">Argentina (+54)</option>
+              <option value="374">Armenia (+374)</option>
+              <option value="43">Austria (+43)</option>
+              <option value="994">Azerbaijan (+994)</option>
+              <option value="973">Bahrain (+973)</option>
+              <option value="880">Bangladesh (+880)</option>
+              <option value="32">Belgium (+32)</option>
+              <option value="55">Brazil (+55)</option>
+              <option value="359">Bulgaria (+359)</option>
+              <option value="855">Cambodia (+855)</option>
+              <option value="56">Chile (+56)</option>
+              <option value="86">China (+86)</option>
+              <option value="57">Colombia (+57)</option>
+              <option value="506">Costa Rica (+506)</option>
+              <option value="385">Croatia (+385)</option>
+              <option value="357">Cyprus (+357)</option>
+              <option value="420">Czech Republic (+420)</option>
+              <option value="45">Denmark (+45)</option>
+              <option value="20">Egypt (+20)</option>
+              <option value="372">Estonia (+372)</option>
+              <option value="358">Finland (+358)</option>
+              <option value="33">France (+33)</option>
+              <option value="995">Georgia (+995)</option>
+              <option value="49">Germany (+49)</option>
+              <option value="30">Greece (+30)</option>
+              <option value="852">Hong Kong (+852)</option>
+              <option value="36">Hungary (+36)</option>
+              <option value="354">Iceland (+354)</option>
+              <option value="62">Indonesia (+62)</option>
+              <option value="964">Iraq (+964)</option>
+              <option value="353">Ireland (+353)</option>
+              <option value="972">Israel (+972)</option>
+              <option value="39">Italy (+39)</option>
+              <option value="81">Japan (+81)</option>
+              <option value="962">Jordan (+962)</option>
+              <option value="7">Kazakhstan (+7)</option>
+              <option value="254">Kenya (+254)</option>
+              <option value="965">Kuwait (+965)</option>
+              <option value="961">Lebanon (+961)</option>
+              <option value="60">Malaysia (+60)</option>
+              <option value="52">Mexico (+52)</option>
+              <option value="212">Morocco (+212)</option>
+              <option value="977">Nepal (+977)</option>
+              <option value="31">Netherlands (+31)</option>
+              <option value="64">New Zealand (+64)</option>
+              <option value="234">Nigeria (+234)</option>
+              <option value="47">Norway (+47)</option>
+              <option value="968">Oman (+968)</option>
+              <option value="63">Philippines (+63)</option>
+              <option value="48">Poland (+48)</option>
+              <option value="351">Portugal (+351)</option>
+              <option value="974">Qatar (+974)</option>
+              <option value="40">Romania (+40)</option>
+              <option value="7_ru">Russia (+7)</option>
+              <option value="65">Singapore (+65)</option>
+              <option value="27">South Africa (+27)</option>
+              <option value="82">South Korea (+82)</option>
+              <option value="34">Spain (+34)</option>
+              <option value="94">Sri Lanka (+94)</option>
+              <option value="46">Sweden (+46)</option>
+              <option value="41">Switzerland (+41)</option>
+              <option value="886">Taiwan (+886)</option>
+              <option value="66">Thailand (+66)</option>
+              <option value="90">Turkey (+90)</option>
+              <option value="380">Ukraine (+380)</option>
+              <option value="84">Vietnam (+84)</option>
+              <option value="auto">Other / Custom</option>
+            </optgroup>
+          </select>
         </div>
-        <div style="flex: 1;">
-          <label>Min Delay (Sec)</label>
-          <input type="number" id="minDelay" value="30" min="15" max="300">
+        <div style="flex: 1.7;">
+          <label id="contactLabel">Phone / WhatsApp</label>
+          <input type="text" id="contactPhone" placeholder="855-788-2696">
         </div>
       </div>
+      <div class="hint">Call me clean number aayega, WhatsApp link me code auto lag jayega</div>
 
-      <button id="startAutoBtn" class="btn-auto-start">
-        <span>🚀</span> Start Auto Search & Comment
-      </button>
-      <button id="stopAutoBtn" class="btn-auto-stop">
-        <span>⏹️</span> Stop Auto-Pilot
+      <label>✍️ Custom AI Instruction / Tone (Optional)</label>
+      <input type="text" id="customInstruction" placeholder="e.g. call and whatsapp only, no dm, free estimate">
+
+      <label>Auto-Search Queries (Optional / Comma-Separated)</label>
+      <input type="text" id="searchKeyword" placeholder="e.g. need lawn care, looking for landscaper, yard cleanup">
+      <div class="hint">Khali chhor den toh AI khud buyer queries banayega. Multiple queries har 5-8 minute rotate hongi!</div>
+
+      <!-- Freshness & Saturation Filter -->
+      <div class="row" style="margin-top: 6px;">
+        <div style="flex: 1;">
+          <label>⚡ Max Comments on Post</label>
+          <select id="maxExistingComments">
+            <option value="3">🔥 Max 3 Comments (Super Fresh)</option>
+            <option value="5" selected>⚡ Max 5 Comments (Recommended)</option>
+            <option value="10">📌 Max 10 Comments</option>
+            <option value="999">🌐 No Limit (All Posts)</option>
+          </select>
+        </div>
+        <div style="flex: 1;">
+          <label>⏳ Max Post Age</label>
+          <select id="maxPostAgeHours">
+            <option value="4">⚡ Past 4 Hours (Hottest Leads)</option>
+            <option value="8" selected>📅 Past 8 Hours (Recommended)</option>
+            <option value="24">🕒 Past 24 Hours</option>
+          </select>
+        </div>
+      </div>
+      <div class="hint">Purani aur saturated posts (jin par pehle se bohot comments hon) AI unhein skip karega!</div>
+
+      <!-- Auto-Commenter Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>🚀 Auto-Commenter (Full Auto-Pilot)</span>
+          <span class="stat-text" id="dailyCounterText">0 / 25 Today</span>
+        </div>
+
+        <div class="row">
+          <div style="flex: 1;">
+            <label>Daily Limit</label>
+            <input type="number" id="dailyLimit" value="25" min="5" max="100">
+          </div>
+          <div style="flex: 1;">
+            <label>Min Delay (Sec)</label>
+            <input type="number" id="minDelay" value="30" min="15" max="300">
+          </div>
+        </div>
+
+        <button id="startAutoBtn" class="btn-auto-start">
+          <span>🚀</span> Start Auto Search & Comment
+        </button>
+        <button id="stopAutoBtn" class="btn-auto-stop">
+          <span>⏹️</span> Stop Auto-Pilot
+        </button>
+      </div>
+
+      <button id="saveBtn" class="btn-save">Save Settings</button>
+      <button id="clearMemoryBtn" class="btn-clear">🧹 Reset Lead Memory (Test Fresh)</button>
+      <div id="status">✓ Settings Saved!</div>
+
+      <!-- Quick Switcher to Sniper View -->
+      <button id="openSniperFromMainBtn" type="button" style="width: 100%; margin-top: 12px; padding: 8px; background: rgba(124, 58, 237, 0.15); border: 1px dashed #8b5cf6; border-radius: 6px; color: #c084fc; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <span>🎯</span> Open Live Lead Sniper Dashboard ➔
       </button>
     </div>
 
-    <button id="saveBtn" class="btn-save">Save Settings</button>
-    <button id="clearMemoryBtn" class="btn-clear">🧹 Reset Lead Memory (Test Fresh)</button>
-    <div id="status">✓ Settings Saved!</div>
+    <!-- ============================================================== -->
+    <!-- DASHBOARD VIEW 2: LIVE LEAD SNIPER (DEDICATED DASHBOARD)       -->
+    <!-- ============================================================== -->
+    <div id="sniperDashboardView" style="display: none;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+        <h3 style="margin: 0; font-size: 13px; color: #c084fc;">
+          <span>🎯 Live Lead Sniper Dashboard</span>
+        </h3>
+        <button id="backToMainTopBtn" type="button" style="background: #1e293b; border: 1px solid #475569; color: #38bdf8; font-size: 10.5px; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+          ⬅️ Back to Main
+        </button>
+      </div>
+
+      <div class="card" style="border-color: #8b5cf6; background: #131b2e;">
+        <div class="card-title">
+          <span style="color: #c084fc;">🎯 Silent Lead Capture & Instant Alerts</span>
+          <span class="badge" style="background: #7c3aed; color: white; font-size: 9px; padding: 2px 6px;">Hot Leads Tab</span>
+        </div>
+        <div class="hint" style="margin-bottom: 8px;">
+          Yeh mode Facebook posts scan karega aur buyer milte hi <b>Hot Leads</b> Google Sheet me save karega aur bell bajayega. <b>Facebook par koi comment post nahi hoga!</b>
+        </div>
+
+        <!-- Dedicated Sniper Service -->
+        <label style="color: #38bdf8; font-weight: 700;">🎯 Sniper Target Service / Niche:</label>
+        <input type="text" id="sniperServiceName" placeholder="e.g. web design, seo, plumber, roofing, hvac" style="border-color: #8b5cf6;">
+        <div class="hint">Khali chhor denge toh main dashboard wali service use karega.</div>
+
+        <!-- Alert Phone & Chime -->
+        <div class="row" style="margin-top: 8px;">
+          <div style="flex: 1.2;">
+            <label>Alert WhatsApp Number</label>
+            <input type="text" id="alertWhatsAppPhone" placeholder="03151708943">
+          </div>
+          <div style="flex: 0.8;">
+            <label>Chime Bell</label>
+            <select id="enableChimeAlert">
+              <option value="true">🔔 Sound ON</option>
+              <option value="false">🔕 Mute</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Search Queries for Sniper -->
+        <label style="margin-top: 8px;">Sniper Search Queries (Optional)</label>
+        <input type="text" id="sniperSearchKeyword" placeholder="e.g. need website, looking for plumber, iso hvac">
+        <div class="hint">Khali chhor den toh AI khud buyer keywords search karega!</div>
+
+        <!-- Scan Delay & Daily Limit -->
+        <div class="row" style="margin-top: 8px;">
+          <div style="flex: 1;">
+            <label>Scan Interval (Sec)</label>
+            <input type="number" id="sniperMinDelay" value="25" min="10" max="300">
+          </div>
+          <div style="flex: 1;">
+            <label>Max Leads To Snipe</label>
+            <input type="number" id="sniperDailyLimit" value="40" min="5" max="200">
+          </div>
+        </div>
+
+        <!-- Freshness & Saturation Filter for Sniper -->
+        <div class="row" style="margin-top: 8px;">
+          <div style="flex: 1;">
+            <label>⚡ Max Comments on Post</label>
+            <select id="sniperMaxComments">
+              <option value="3">🔥 Max 3 Comments (Fresh)</option>
+              <option value="5" selected>⚡ Max 5 Comments (Recommended)</option>
+              <option value="10">📌 Max 10 Comments</option>
+              <option value="999">🌐 No Limit</option>
+            </select>
+          </div>
+          <div style="flex: 1;">
+            <label>⏳ Max Post Age</label>
+            <select id="sniperMaxAge">
+              <option value="4">⚡ Past 4 Hours</option>
+              <option value="8" selected>📅 Past 8 Hours (Recommended)</option>
+              <option value="24">🕒 Past 24 Hours</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- START / STOP SNIPER BUTTONS -->
+        <button id="startSniperBtn" class="btn-auto-start" style="background: linear-gradient(135deg, #7c3aed, #4f46e5); margin-top: 12px;">
+          <span>🎯</span> Start Live Lead Sniper (Silent Alerts)
+        </button>
+        <button id="stopSniperBtn" class="btn-auto-stop" style="display: none; margin-top: 12px;">
+          <span>⏹️</span> Stop Lead Sniper
+        </button>
+
+        <!-- Client Personal Webhook -->
+        <details style="margin-top: 10px;">
+          <summary style="font-size: 10px; color: #a78bfa; cursor: pointer;">⚙️ Client Personal Sheet Webhook (Optional)</summary>
+          <input type="text" id="customSheetWebhook" placeholder="Khali chhor dein to Admin Sheet me jayega" style="font-size: 10px; margin-top: 4px;">
+        </details>
+      </div>
+
+      <button id="saveSniperBtn" class="btn-save" style="background: #7c3aed;">Save Sniper Settings</button>
+      <div id="sniperStatus">✓ Sniper Settings Saved!</div>
+
+      <button id="backToMainBottomBtn" type="button" class="btn-clear" style="margin-top: 10px;">
+        ⬅️ Back to Main Auto-Pilot Dashboard
+      </button>
+    </div>
   </div>
 
   <script src="license_manager.js"></script>

@@ -1,8 +1,13 @@
 {
   "manifest_version": 3,
   "name": "PakDigital AI Auto Commenter",
-  "version": "1.2.0",
-  "description": "Right Click AI Comment Generator for Facebook",
+  "version": "1.2.1",
+  "description": "Smart AI-assisted response generator and lead engagement assistant for Facebook.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": [
     "storage",
     "activeTab",
@@ -17,7 +22,12 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "PakDigital AI Settings"
+    "default_title": "PakDigital AI Agent",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
   "content_scripts": [
     {

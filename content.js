@@ -89,10 +89,13 @@ function getExpandedKeywords(userQuery) {
 }
 
 // ------------------------------------------------------------------
-// POST FRESHNESS FILTER (Today / Hours / Minutes Ago)
+// POST FRESHNESS & COMMENTS SATURATION FILTER
 // ------------------------------------------------------------------
-function isPostFreshToday(postEl) {
+const CHRONO_SORT_FILTER = "eyJycF9jaHJvbm9fc29ydCI6IntcIm5hbWVcIjpcImNocm9ub3NvcnRcIixcImFyZ3NcIjpcIlwifSJ9";
+
+function isPostFresh(postEl, maxHours) {
   if (!postEl) return true;
+  const limitHours = (typeof maxHours === "number" && maxHours > 0) ? maxHours : 8;
 
   const timeLinks = postEl.querySelectorAll('a[href*="/posts/"], a[href*="/permalink/"], a[href*="story_fbid"], abbr, span[id*="jsc_c"], a[role="link"] > span');
   let timeText = "";
@@ -107,7 +110,7 @@ function isPostFreshToday(postEl) {
     timeText = (postEl.innerText || "").slice(0, 300).toLowerCase();
   }
 
-  // Reject clearly old posts
+  // 1. Reject clearly old posts (days, weeks, months, years)
   const oldPatterns = [
     /\byesterday\b/,
     /\b\d+\s*(?:d|day|days)\b/,
@@ -125,7 +128,57 @@ function isPostFreshToday(postEl) {
     }
   }
 
-  return true; // Fresh or ambiguous -> allowed!
+  // 2. Reject posts older than limitHours (e.g. "21h", "18h", "12 hours ago")
+  const hourMatch = timeText.match(/\b(\d+)\s*(?:h|hr|hrs|hours?)\b/);
+  if (hourMatch) {
+    const hours = parseInt(hourMatch[1], 10);
+    if (!isNaN(hours) && hours > limitHours) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function getPostExistingComments(postEl) {
+  if (!postEl) return 0;
+  const text = (postEl.innerText || "").slice(0, 1500);
+
+  // Match e.g. "12 comments", "1 comment", "5 replies", "8 answers"
+  const commentMatch = text.match(/\b(\d+[\d,]*)\s*(?:comments?|replies|answers?)\b/i);
+  if (commentMatch) {
+    const raw = commentMatch[1].replace(/,/g, "");
+    const count = parseInt(raw, 10);
+    return isNaN(count) ? 0 : count;
+  }
+
+  // Check visible rendered comments in this post
+  const visible = postEl.querySelectorAll('div[aria-label*="comment by" i], div[role="article"] div[role="article"]');
+  if (visible.length > 0) return visible.length;
+
+  return 0;
+}
+
+function ensureRecentPostsFilterActive() {
+  try {
+    const filterSection = document.querySelector('div[aria-label*="filter" i], div[role="navigation"], div.x1iyjqo2');
+    const container = filterSection || document;
+    const candidates = container.querySelectorAll('div[role="radio"], div[role="checkbox"], div[role="switch"], div[role="button"], span');
+    for (const el of candidates) {
+      const text = (el.innerText || "").trim().toLowerCase();
+      const aria = (el.getAttribute("aria-label") || "").toLowerCase();
+      if (text === "recent posts" || text === "most recent" || aria.includes("recent posts") || aria.includes("most recent")) {
+        const clickable = el.closest('div[role="radio"], div[role="checkbox"], div[role="button"], label') || el;
+        const isChecked = clickable.getAttribute("aria-checked") === "true";
+        if (!isChecked) {
+          console.log("[PakDigital AI] Activating 'Recent Posts' filter in Facebook sidebar!");
+          clickable.click();
+          return true;
+        }
+      }
+    }
+  } catch (e) {}
+  return false;
 }
 
 // ------------------------------------------------------------------
@@ -310,6 +363,73 @@ function findBlueSendButton(box) {
     }
   }
   return null;
+}
+
+function extractPostUrl(postEl) {
+  if (!postEl) return window.location.href;
+  const links = postEl.querySelectorAll('a[href*="/posts/"], a[href*="/permalink/"], a[href*="fbid="], a[href*="/watch/"], a[href*="/videos/"], a[href*="/groups/"]');
+  for (const a of links) {
+    const href = a.href || "";
+    if (href.includes("/posts/") || href.includes("/permalink/") || href.includes("fbid=")) {
+      try {
+        const u = new URL(href);
+        return `${u.origin}${u.pathname}`;
+      } catch(e) {
+        return href.split("?")[0];
+      }
+    }
+  }
+  return window.location.href;
+}
+
+function playLeadAlertChime() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
+    
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    
+    osc.start();
+    osc.stop(ctx.currentTime + 0.5);
+  } catch(e) {}
+}
+
+function reportHotLeadToSheet(settings, postUrl, authorName, postSnippet, commentText) {
+  try {
+    const key = (settings && settings.licenseKey) ? settings.licenseKey : "";
+    const isSniperAlert = settings && settings.sniperMode === "alert_only";
+    const service = (isSniperAlert && settings.sniperServiceName && settings.sniperServiceName.trim())
+      ? settings.sniperServiceName.trim()
+      : ((settings && settings.customServiceName) ? settings.customServiceName : "Service");
+    const phone = (settings && (settings.alertWhatsAppPhone || settings.contactPhone)) ? (settings.alertWhatsAppPhone || settings.contactPhone) : "";
+    const webhook = (settings && settings.customSheetWebhook) ? settings.customSheetWebhook : (settings && settings.licenseWebhookUrl ? settings.licenseWebhookUrl : (typeof PRODUCTION_WEBHOOK_URL !== "undefined" ? PRODUCTION_WEBHOOK_URL : ""));
+
+    if (!webhook) return;
+    const cleanSnippet = (postSnippet || "").replace(/[\r\n\t]+/g, " ").trim().slice(0, 300);
+    const cleanComment = (commentText || "").replace(/[\r\n\t]+/g, " ").trim().slice(0, 300);
+    const url = `${webhook}?action=SAVE_LEAD&key=${encodeURIComponent(key)}&service=${encodeURIComponent(service)}&author=${encodeURIComponent(authorName)}&postUrl=${encodeURIComponent(postUrl)}&postText=${encodeURIComponent(cleanSnippet)}&comment=${encodeURIComponent(cleanComment)}&phone=${encodeURIComponent(phone)}`;
+
+    fetch(url)
+      .then(r => r.json())
+      .then(res => {
+        console.log("[PakDigital AI] Lead recorded in Sheet:", res);
+        if (res.success && !res.duplicate) {
+          const statusEl = document.getElementById("pakdigital-hud-status");
+          if (statusEl) statusEl.innerHTML = `🎯 <span style="color:#34d399;">Hot Lead Saved:</span> <b>${authorName || 'Customer'}</b>`;
+        }
+      })
+      .catch(err => console.warn("[PakDigital AI] Lead webhook error:", err));
+  } catch(e) {}
 }
 
 function insertAndSubmitComment(box, text, shouldPressEnter) {
@@ -531,7 +651,7 @@ function removeAutoPilotBadge() {
 async function startAutoPilot() {
   if (isAutoPilotActive) return;
 
-  chrome.storage.sync.get(["isLicenseActive", "licenseKey", "licenseWebhookUrl"], async (data) => {
+  chrome.storage.sync.get(["isLicenseActive", "licenseKey", "licenseWebhookUrl", "sniperMode"], async (data) => {
     if (!data.isLicenseActive || !data.licenseKey) {
       alert("🔒 PakDigital AI Agent: License Not Activated!\nPlease click the extension icon and enter your license key to activate.");
       stopAutoPilot();
@@ -551,7 +671,10 @@ async function startAutoPilot() {
     isAutoPilotActive = true;
     scanAttemptsWithoutMatch = 0;
     commentsOnCurrentQuery = 0;
-    showAutoPilotBadge("🚀 Auto-Pilot Active: Scanning Leads...", "Initializing...");
+    const badgeTitle = data.sniperMode === "alert_only"
+      ? "🎯 Live Lead Sniper: Scanning Leads (Silent Alert Mode)..."
+      : "🚀 Auto-Pilot Active: Scanning Leads...";
+    showAutoPilotBadge(badgeTitle, "Initializing...");
     runAutoPilotCycle();
   });
 }
@@ -599,7 +722,9 @@ async function runAutoPilotCycle() {
   chrome.storage.sync.get([
     "isLicenseActive", "licenseKey", "licenseWebhookUrl",
     "customServiceName", "contactPhone", "customNote", "dailyLimit", "minDelay", "todayCount", 
-    "ctaGoal", "customInstruction", "targetCountry", "searchQueryQueue", "activeQueryIndex", "queryStartTime"
+    "ctaGoal", "customInstruction", "targetCountry", "searchQueryQueue", "activeQueryIndex", "queryStartTime",
+    "sniperMode", "sniperServiceName", "enableChimeAlert", "alertWhatsAppPhone", "customSheetWebhook",
+    "maxExistingComments", "maxPostAgeHours", "sniperMaxComments", "sniperMaxAge"
   ], async (settings) => {
     if (!isAutoPilotActive) return;
 
@@ -626,7 +751,10 @@ async function runAutoPilotCycle() {
     const limit = settings.dailyLimit || 25;
     const count = settings.todayCount || 0;
     const myContact = settings.contactPhone || "";
-    const myService = settings.customServiceName || "plumbing";
+    const isSniperAlertOnly = settings.sniperMode === "alert_only";
+    const myService = (isSniperAlertOnly && settings.sniperServiceName && settings.sniperServiceName.trim())
+      ? settings.sniperServiceName.trim()
+      : (settings.customServiceName || "plumbing");
     const myGoal = settings.ctaGoal || "call";
     const instruction = settings.customInstruction || "";
     const myCountry = settings.targetCountry || "1";
@@ -678,7 +806,7 @@ async function runAutoPilotCycle() {
         queryStartTime: Date.now()
       }, () => {
         setTimeout(() => {
-          const nextUrl = `https://www.facebook.com/search/posts/?q=${encodeURIComponent(nextQuery)}&filters=eyJycF9jaHJvbm9fc29ydDoiZXlKaGJHY2lPaUpTVXpJMU5pSjlmUT09In0%3D`;
+          const nextUrl = `https://www.facebook.com/search/posts/?q=${encodeURIComponent(nextQuery)}&filters=${CHRONO_SORT_FILTER}`;
           window.location.href = nextUrl;
         }, 1500);
       });
@@ -688,11 +816,14 @@ async function runAutoPilotCycle() {
     // 3. Ensure Facebook is strictly on "Posts" tab (Never stay on "All")
     if (window.location.pathname.includes("/search/top") || (!window.location.pathname.includes("/search/posts") && window.location.pathname.includes("/search/"))) {
       showAutoPilotBadge("Switching to Recent Posts Tab...", countInfo, metaInfo);
-      window.location.href = `https://www.facebook.com/search/posts/?q=${encodeURIComponent(currentQuery)}&filters=eyJycF9jaHJvbm9fc29ydDoiZXlKaGJHY2lPaUpTVXpJMU5pSjlmUT09In0%3D`;
+      window.location.href = `https://www.facebook.com/search/posts/?q=${encodeURIComponent(currentQuery)}&filters=${CHRONO_SORT_FILTER}`;
       return;
     }
 
-    // 4. Scan Visible Feed / Posts
+    // 4. Force "Recent Posts" Filter in Facebook Left Sidebar if present
+    ensureRecentPostsFilterActive();
+
+    // 5. Scan Visible Feed / Posts
     const postContainers = document.querySelectorAll(`
       div[role="feed"] > div,
       div[role="article"],
@@ -712,9 +843,25 @@ async function runAutoPilotCycle() {
       // Skip if actually commented previously, or skipped in this tab session
       if (!key || actuallyCommentedPostKeys.has(key) || currentSessionSkipped.has(key)) continue;
 
-      // Freshness check: Skip only if clearly old (yesterday, weeks ago)
-      if (!isPostFreshToday(post)) {
+      // 1. Freshness check: Skip if older than max allowed hours (e.g. 8h or 4h)
+      const maxAge = isSniperAlertOnly
+        ? (settings.sniperMaxAge || settings.maxPostAgeHours || 8)
+        : (settings.maxPostAgeHours || 8);
+
+      if (!isPostFresh(post, maxAge)) {
         currentSessionSkipped.add(key);
+        continue;
+      }
+
+      // 2. Saturation check: Skip if post already has too many comments!
+      const maxComments = isSniperAlertOnly
+        ? (settings.sniperMaxComments || settings.maxExistingComments || 5)
+        : (settings.maxExistingComments || 5);
+
+      const existingComments = getPostExistingComments(post);
+      if (existingComments > maxComments) {
+        currentSessionSkipped.add(key);
+        showAutoPilotBadge(`⏭️ Skipped: Post has ${existingComments} comments (max ${maxComments})`, countInfo, metaInfo);
         continue;
       }
 
@@ -767,6 +914,47 @@ async function runAutoPilotCycle() {
     if (targetPost && targetTrigger && targetPostKey) {
       scanAttemptsWithoutMatch = 0;
 
+      const postUrl = extractPostUrl(targetPost);
+      const authorName = findAuthorName(targetPost);
+
+      // 1. Play Lead Alert Chime if enabled
+      if (settings.enableChimeAlert !== false) {
+        playLeadAlertChime();
+      }
+
+      // 2. Check Sniper Mode: Alert Only VS Auto-Comment
+      if (settings.sniperMode === "alert_only") {
+        // Record lead with Sniper note
+        reportHotLeadToSheet(settings, postUrl, authorName, targetPost.innerText, "🎯 Silent Sniper (Alert Only - No Comment)");
+
+        showAutoPilotBadge(`🔔 Sniped Lead for <b>${authorName || 'Customer'}</b>! (Alert Saved to Sheet)`, countInfo, metaInfo);
+        markPostAsCommented(targetPostKey);
+        commentsOnCurrentQuery++;
+
+        setTimeout(() => {
+          window.scrollBy({ top: 500, behavior: "smooth" });
+        }, 1500);
+
+        const baseDelay = Math.max(15, settings.minDelay || 30);
+        const randomExtra = Math.floor(Math.random() * 10);
+        const nextWait = baseDelay + randomExtra;
+
+        let secondsLeft = nextWait;
+        const countdownInterval = setInterval(() => {
+          if (!isAutoPilotActive) {
+            clearInterval(countdownInterval);
+            return;
+          }
+          secondsLeft--;
+          showAutoPilotBadge(`🔔 Lead Alerted! Waiting: ${secondsLeft}s for next scan...`, countInfo, metaInfo);
+          if (secondsLeft <= 0) {
+            clearInterval(countdownInterval);
+            if (isAutoPilotActive) runAutoPilotCycle();
+          }
+        }, 1000);
+        return;
+      }
+
       showAutoPilotBadge("🎯 Matching Lead Found! Opening comment box...", countInfo, metaInfo);
       targetPost.scrollIntoView({ behavior: "smooth", block: "center" });
 
@@ -778,6 +966,9 @@ async function runAutoPilotCycle() {
 
         const comment = generateSmartComment(authorName, myService, myContact, note, myGoal, instruction, myCountry);
         insertAndSubmitComment(realBox, comment, true);
+
+        // Save Lead to Google Sheet WITH the exact posted AI comment!
+        reportHotLeadToSheet(settings, postUrl, authorName, targetPost.innerText, comment);
 
         // Mark as commented ONLY after real typing happens!
         markPostAsCommented(targetPostKey);

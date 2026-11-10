@@ -86,8 +86,8 @@ async function verifyLicenseKey(licenseKey, customWebhookUrl) {
       key: cleanKey,
       deviceId: deviceId,
       profileId: profileId,
-      plan: "VIP Master",
-      dailyLimit: 200,
+      plan: "Owner VIP (Unlimited)",
+      dailyLimit: 1000,
       maxProfiles: 99,
       usedProfiles: 1,
       message: "Admin Master License Verified!"
